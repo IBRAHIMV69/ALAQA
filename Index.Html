@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amazing Video Page with Ads</title>
+    <style>
+        /* General Styles */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #1a1a1a;
+            color: #fff;
+            overflow-x: hidden; /* Prevent horizontal scrolling */
+        }
+
+        /* Video Container */
+        .video-container {
+            width: 100%;
+            max-width: 800px;
+            margin: auto;
+            background: black;
+        }
+
+        .video-container iframe {
+            width: 100%;
+            height: calc(100vw * 9 / 16);
+            max-height: 450px;
+            border-radius: 8px;
+            border: none;
+        }
+
+        /* Scrollable Number Navigation */
+        .scroll-container {
+            display: flex;
+            overflow-x: auto;
+            white-space: nowrap;
+            padding: 10px;
+            background: #000;
+            border: 1px solid #555;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        .scroll-container::-webkit-scrollbar {
+            display: none;
+        }
+
+        .number {
+            padding: 8px 20px;
+            background: #333;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            margin: 0 5px;
+            flex: 0 0 auto;
+        }
+
+        .number.active {
+            background: #ffcc00;
+            color: black;
+        }
+
+        /* Scrollable Video List */
+        .video-list {
+            max-height: 400px; /* Set a maximum height */
+            overflow-y: auto; /* Enable vertical scrolling */
+            text-align: left;
+            padding: 10px;
+            font-size: 15px;
+            background: #1a1a1a;
+            margin: 20px auto; /* Center the video list with margin */
+            width: 100%;
+            max-width: 800px; /* Match max width with video container */
+            border-radius: 8px; /* Rounded corners */
+        }
+
+        .video-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            cursor: pointer;
+            border-bottom: 1px solid #333; /* Divider */
+            transition: background 0.3s; /* Smooth hover transition */
+        }
+
+        .video-item img {
+            width: 90px; /* Fixed thumbnail width */
+            height: 65px; /* Fixed thumbnail height */
+            border-radius: 5px;
+        }
+
+        .video-item:hover {
+            background: #333; /* Highlight on hover */
+        }
+
+        .video-item.active {
+            background: #333; /* Highlight active video item */
+        }
+
+        /* Ad Overlay */
+        .ad-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            display: none; /* Hidden by default */
+            align-items: center;
+            justify-content: center;
+            z-index: 999;
+        }
+
+        .ad-popup {
+            position: relative;
+            width: 100%;
+            max-width: 250px; /* Fixed popup width */
+            border-radius: 15px;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .ad-popup img {
+            width: 100%; /* Full width images */
+            border-radius: 15px; /* Rounded corners */
+            display: block;
+        }
+
+        .ad-popup .close-btn {
+            position: absolute;
+            top: 7px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: none;
+            padding: 0px;
+            font-size: 20px;
+            cursor: pointer;
+            border-radius: 50%;
+        }
+
+        /* Ad Container Styles */
+        .ad-container {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            background: #fff;
+            border: 1px solid #ccc;
+            box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.2);
+            padding: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 1000;
+            display: none; /* Hidden until ad shows */
+        }
+
+        .ad-content {
+            display: flex;
+            align-items: center;
+            flex-grow: 1;
+            overflow: hidden;
+        }
+
+        .app-icon {
+            width: 50px; /* Fixed icon size */
+            height: 50px; /* Fixed icon size */
+            border-radius: 12px;
+            overflow: hidden;
+            margin-right: 10px;
+            flex-shrink: 0;
+        }
+
+        .app-icon img {
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            object-fit: cover;
+        }
+
+        .ad-info {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .app-name {
+            font-weight: bold;
+            font-size: 16px;
+            color: #333;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 200px; /* Limit width to fit */
+            margin-bottom: 4px;
+        }
+
+        .ad-meta {
+            font-size: 14px;
+            color: #555; /* Text color */
+            white-space: nowrap;
+        }
+
+        .install-button {
+            background-color: #007bff;
+            color: white;
+            padding: 8px 14px;
+            border: none;
+            border-radius: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            text-decoration: none;
+            margin-left: 10px;
+            flex-shrink: 0;
+        }
+
+        .install-button:hover {
+            background-color: #0056b3;
+        }
+
+        .sponsored {
+            font-size: 12px;
+            color: #777; /* Color for sponsored text */
+            margin-right: 5px;
+        }
+
+        .ad-wrapper {
+            display: flex;
+            align-items: center;
+            flex: 1;
+            overflow: hidden;
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- Video Container -->
+    <div class="video-container">
+        <iframe id="videoPlayer" src="https://www.youtube.com/embed/EWyicuwdS6s" allowfullscreen></iframe>
+    </div>
+
+    <!-- Scrollable Number Navigation -->
+    <div class="scroll-container" id="numberScroll"></div>
+
+    <!-- Video List -->
+    <div class="video-list" id="videoList"></div>
+
+    <!-- Ad Overlay -->
+    <div class="ad-overlay" id="adOverlay">
+        <div class="ad-popup">
+            <button class="close-btn" onclick="closeAd()" aria-label="Close ad">✖</button>
+            <img id="adImage" src="" alt="Ad Image" onclick="goToAdLink()">
+        </div>
+    </div>
+
+    <!-- Ad Container -->
+    <div class="ad-container" id="adContainer">
+        <div class="ad-wrapper">
+            <div class="ad-content" id="adContent"></div>
+        </div>
+        <a href="#" id="installButton" class="install-button" target="_blank">Install</a>
+    </div>
+
+    <script>
+        // Function to show or hide the ad container based on the scroll position
+        function handleScroll() {
+            const videoList = document.getElementById('videoList');
+            const adContainer = document.getElementById('adContainer');
+
+            const isAtBottom = videoList.scrollHeight - videoList.scrollTop === videoList.clientHeight;
+
+            if (isAtBottom) {
+                adContainer.style.display = 'none'; // Hide ad container when scrolled to bottom
+            } else {
+                adContainer.style.display = 'flex'; // Show ad container when not at bottom
+            }
+        }
+
+        // Add event listener to handle scroll on the video list
+        document.getElementById('videoList').addEventListener('scroll', handleScroll);
+
+        // App data for ads
+        const apps = [
+            {
+                name: "Cheelee: Short Videos f...",
+                icon: "https://tinylink.info/119AL",
+                rating: "4.5",
+                link: "https://tinylink.info/119Aa"
+            },
+            {
+                name: "CoolApp",
+                icon: "https://tinylink.info/119A0",
+                rating: "4.8",
+                link: "https://tinylink.info/YchD"
+            },
+            {
+                name: "Z League: Mini Games & Friends",
+                icon: "https://tinylink.info/Ycg4",
+                rating: "4.0",
+                link: "https://tinylink.info/119yG"
+            }
+            // You can add unlimited apps here
+        ];
+
+        const adContainer = document.getElementById('adContainer');
+        const adContent = document.getElementById('adContent');
+        const installButton = document.getElementById('installButton');
+
+        // Load saved index
+        let currentAdIndex = parseInt(localStorage.getItem('currentAdIndex')) || 0;
+
+        function showAd(index) {
+            const app = apps[index];
+            adContent.innerHTML = `
+                <div class="app-icon">
+                    <img src="${app.icon}" alt="App Icon">
+                </div>
+                <div class="ad-info">
+                    <div class="app-name">${app.name}</div>
+                    <div class="ad-meta">
+                        <span class="sponsored">Sponsored ·</span>
+                        <span>${app.rating} ★ FREE</span>
+                    </div>
+                </div>
+            `;
+            installButton.href = app.link;
+            adContainer.style.display = 'flex';
+
+            // Save the current index for next time
+            localStorage.setItem('currentAdIndex', index);
+        }
+
+        function rotateAds() {
+            showAd(currentAdIndex);
+            currentAdIndex = (currentAdIndex + 1) % apps.length;
+        }
+
+        // Show ad immediately and start rotating
+        rotateAds();
+        setInterval(rotateAds, 15000); // Rotate every 15 seconds
+
+        // Ad Overlay
+        const ads = [
+            {
+                image: "https://bit.ly/4gHMJHL",
+                link: "https://true-click.pro/a/44J1UBOggfxOkx",
+                buttonTitle: "Chat Now"
+            },
+            {
+                image: "https://bit.ly/49TAXap",
+                link: "https://true-click.pro/a/44J1UBOggfxOkx",
+                buttonTitle: "Chat Now"
+            }
+        ];
+
+        let currentOverlayAdIndex = 0;
+        const firstPopupDelay = 1500000; // 15 seconds
+        const popupInterval = 30000000; // 30 seconds
+
+        function showOverlayAd() {
+            const adOverlay = document.getElementById("adOverlay");
+            const adImage = document.getElementById("adImage");
+
+            adImage.src = ads[currentOverlayAdIndex].image;
+            adOverlay.style.display = "flex";
+
+            currentOverlayAdIndex = (currentOverlayAdIndex + 1) % ads.length;
+        }
+
+        function closeAd() {
+            const adOverlay = document.getElementById("adOverlay");
+            adOverlay.style.display = "none";
+        }
+
+        function goToAdLink() {
+            window.open(ads[currentOverlayAdIndex].link, "_blank");
+        }
+
+        // Video Data (Simulated YouTube Links with unlimited videos per season)
+        const videoData = {
+            5: [
+                { title: "ALAQA EPISODE 1", thumb: "https://img.youtube.com/vi/Bz8X-CpF59s/sddefault.jpg", id: "Bz8X-CpF59s" },
+                { title: "ALAQA EPISODE 2", thumb: "https://img.youtube.com/vi/fMIsTHbaX4E/0.jpg", id: "fMIsTHbaX4E" },
+                { title: "ALAQA EPISODE 3", thumb: "https://img.youtube.com/vi/59h4AGQn7JQ/0.jpg", id: "59h4AGQn7JQ" },
+                { title: "ALAQA EPISODE 4", thumb: "https://img.youtube.com/vi/2oF8MDd6HHA/sddefault.jpg", id: "2oF8MDd6HHA" },
+                { title: "ALAQA EPISODE 5", thumb: "https://img.youtube.com/vi/z_3GkqGBizM/0.jpg", id: "z_3GkqGBizM" },
+                { title: "ALAQA EPISODE 6", thumb: "https://img.youtube.com/vi/dMiDS9MhrLs/0.jpg", id: "dMiDS9MhrLs" },
+                { title: "ALAQA EPISODE 7", thumb: "https://img.youtube.com/vi/lngpKmhqY-I/sddefault.jpg", id: "lngpKmhqY-I" },
+                { title: "ALAQA EPISODE 8", thumb: "https://img.youtube.com/vi/-phgDoffVCM/0.jpg", id: "-phgDoffVCM" },
+                { title: "ALAQA EPISODE 9", thumb: "https://img.youtube.com/vi/GT93FsqSzmc/0.jpg", id: "GT93FsqSzmc" },
+                { title: "ALAQA EPISODE 10", thumb: "https://img.youtube.com/vi/mMPlkdABJxY/sddefault.jpg", id: "mMPlkdABJxY" },
+                { title: "ALAQA EPISODE 11", thumb: "https://img.youtube.com/vi/e6uBejZwAa8/0.jpg", id: "e6uBejZwAa8" },
+                { title: "ALAQA EPISODE 12", thumb: "https://img.youtube.com/vi/qp_KTKDW_ik/sddefault.jpg", id: "qp_KTKDW_ik" },
+                { title: "ALAQA EPISODE 13", thumb: "https://img.youtube.com/vi/HjC_e0shgTo/0.jpg", id: "HjC_e0shgTo" }
+            ],
+            4: [
+                { title: "ALAQA EPISODE 1", thumb: "https://img.youtube.com/vi/SNdw9ziXkZE/sddefault.jpg", id: "SNdw9ziXkZE" },
+                { title: "ALAQA EPISODE 2", thumb: "https://img.youtube.com/vi/3AIZ6f_1JPk/0.jpg", id: "3AIZ6f_1JPk" },
+                { title: "ALAQA EPISODE 3", thumb: "https://img.youtube.com/vi/g0vALV_33OI/0.jpg", id: "g0vALV_33OI" },
+                { title: "ALAQA EPISODE 4", thumb: "https://img.youtube.com/vi/poYLG3d3w2U/sddefault.jpg", id: "poYLG3d3w2U" },
+                { title: "ALAQA EPISODE 5", thumb: "https://img.youtube.com/vi/afkiW7WpfqA/0.jpg", id: "afkiW7WpfqA" },
+                { title: "ALAQA EPISODE 6", thumb: "https://img.youtube.com/vi/SZCCaFkodfY/0.jpg", id: "SZCCaFkodfY" },
+                { title: "ALAQA EPISODE 7", thumb: "https://img.youtube.com/vi/a2T2GACyIes/0.jpg", id: "a2T2GACyIes" },
+                { title: "ALAQA EPISODE 8", thumb: "https://img.youtube.com/vi/syur6N1b2_A/0.jpg", id: "syur6N1b2_A" },
+                { title: "ALAQA EPISODE 9", thumb: "https://img.youtube.com/vi/g64B7GkXbdA/0.jpg", id: "g64B7GkXbdA" },
+                { title: "ALAQA EPISODE 10", thumb: "https://img.youtube.com/vi/qtjblLbnZ5A/sddefault.jpg", id: "qtjblLbnZ5A" },
+                { title: "ALAQA EPISODE 11", thumb: "https://img.youtube.com/vi/tc0yljFNQpk/0.jpg", id: "tc0yljFNQpk" },
+                { title: "ALAQA EPISODE 12", thumb: "https://img.youtube.com/vi/x5oeVFifKj8/0.jpg", id: "x5oeVFifKj8" },
+                { title: "ALAQA EPISODE 13", thumb: "https://img.youtube.com/vi/9BL4ckUC6Y4/sddefault.jpg", id: "9BL4ckUC6Y4" },
+            ],
+            3: [
+                { title: "ALAQA EPISODE 1", thumb: "https://img.youtube.com/vi/w-6pM6er9k0/sddefault.jpg", id: "w-6pM6er9k0" },
+                { title: "ALAQA EPISODE 2", thumb: "https://img.youtube.com/vi/CiWXOaQcYoo/0.jpg", id: "CiWXOaQcYoo" },
+                { title: "ALAQA EPISODE 3", thumb: "https://img.youtube.com/vi/YGFub38MTZQ/0.jpg", id: "YGFub38MTZQ" },
+                { title: "ALAQA EPISODE 4", thumb: "https://img.youtube.com/vi/4V3EV_GzJ-s/sddefault.jpg", id: "4V3EV_GzJ-s" },
+                { title: "ALAQA EPISODE 5", thumb: "https://img.youtube.com/vi/IhgsEp2itjw/0.jpg", id: "IhgsEp2itjw" },
+                { title: "ALAQA EPISODE 6", thumb: "https://img.youtube.com/vi/PrCYCLm1cD4/0.jpg", id: "PrCYCLm1cD4" },
+                { title: "ALAQA EPISODE 7", thumb: "https://img.youtube.com/vi/el42-fxQZr4/sddefault.jpg", id: "el42-fxQZr4" },
+                { title: "ALAQA EPISODE 8", thumb: "https://img.youtube.com/vi/fWMA58QCPAs/0.jpg", id: "fWMA58QCPAs" },
+                { title: "ALAQA EPISODE 9", thumb: "https://img.youtube.com/vi/RTbcDdzppb4/0.jpg", id: "RTbcDdzppb4" },
+                { title: "ALAQA EPISODE 10", thumb: "https://img.youtube.com/vi/LFfsUuyqhZo/sddefault.jpg", id: "LFfsUuyqhZo" },
+                { title: "ALAQA EPISODE 11", thumb: "https://img.youtube.com/vi/Rem5pH-4r9E/0.jpg", id: "Rem5pH-4r9E" },
+                { title: "ALAQA EPISODE 12", thumb: "https://img.youtube.com/vi/vAOnqIzL5tk/0.jpg", id: "vAOnqIzL5tk" },
+                { title: "ALAQA EPISODE 13", thumb: "https://img.youtube.com/vi/Ytr-oCGg6aw/0.jpg", id: "Ytr-oCGg6aw" }
+            ],
+            2: [
+                { title: "ALAQA EPISODE 1", thumb: "https://img.youtube.com/vi/CF2_Il8yO_w/sddefault.jpg", id: "CF2_Il8yO_w" },
+                { title: "ALAQA EPISODE 2", thumb: "https://img.youtube.com/vi/hREuHj0u5tk/sddefault.jpg", id: "hREuHj0u5tk" },
+                { title: "ALAQA EPISODE 3", thumb: "https://img.youtube.com/vi/vyk4hhtvAOM/sddefault.jpg", id: "vyk4hhtvAOM" },
+                { title: "ALAQA EPISODE 4", thumb: "https://img.youtube.com/vi/AdF3qn4dhrI/sddefault.jpg", id: "AdF3qn4dhrI" },
+                { title: "ALAQA EPISODE 5", thumb: "https://img.youtube.com/vi/2adfxD6IVbI/sddefault.jpg", id: "2adfxD6IVbI" },
+                { title: "ALAQA EPISODE 6", thumb: "https://img.youtube.com/vi/KT4jVLKA9Tk/sddefault.jpg", id: "KT4jVLKA9Tk" },
+                { title: "ALAQA EPISODE 7", thumb: "https://img.youtube.com/vi/vfDbYyUiHyc/sddefault.jpg", id: "vfDbYyUiHyc" },
+                { title: "ALAQA EPISODE 8", thumb: "https://img.youtube.com/vi/7NJha2Y8Bcs/sddefault.jpg", id: "7NJha2Y8Bcs" },
+                { title: "ALAQA EPISODE 9", thumb: "https://img.youtube.com/vi/duCB79n78oo/sddefault.jpg", id: "duCB79n78oo" },
+                { title: "ALAQA EPISODE 10", thumb: "https://img.youtube.com/vi/-KoFtrHtywo/sddefault.jpg", id: "-KoFtrHtywo" },
+                { title: "ALAQA EPISODE 11", thumb: "https://img.youtube.com/vi/6dFuMiXfGA8/sddefault.jpg", id: "6dFuMiXfGA8" },
+                { title: "ALAQA EPISODE 12", thumb: "https://img.youtube.com/vi/0DrmgxH7dXM/sddefault.jpg", id: "0DrmgxH7dXM" },
+                { title: "ALAQA EPISODE 13", thumb: "https://img.youtube.com/vi/100-dU-MZpE/sddefault.jpg", id: "100-dU-MZpE" },
+            ],
+            1: [
+                { title: "ALAQA EPISODE 1", thumb: "https://img.youtube.com/vi/EWyicuwdS6s/sddefault.jpg", id: "EWyicuwdS6s" },
+                { title: "ALAQA EPISODE 2", thumb: "https://img.youtube.com/vi/b-4iyyGVkBM/0.jpg", id: "b-4iyyGVkBM" },
+                { title: "ALAQA EPISODE 3", thumb: "https://img.youtube.com/vi/Wxw0Fyur4iU/0.jpg", id: "Wxw0Fyur4iU" },
+                { title: "ALAQA EPISODE 4", thumb: "https://img.youtube.com/vi/HgWM3supvo0/sddefault.jpg", id: "HgWM3supvo0" },
+                { title: "ALAQA EPISODE 5", thumb: "https://img.youtube.com/vi/jhfBmbEeXxk/0.jpg", id: "jhfBmbEeXxk" },
+                { title: "ALAQA EPISODE 6", thumb: "https://img.youtube.com/vi/65KU1sG7zkM/0.jpg", id: "65KU1sG7zkM" },
+                { title: "ALAQA EPISODE 7", thumb: "https://img.youtube.com/vi/zQ5f1XtBc9Q/sddefault.jpg", id: "zQ5f1XtBc9Q" },
+                { title: "ALAQA EPISODE 8", thumb: "https://img.youtube.com/vi/PoWJuSS_Wpo/0.jpg", id: "PoWJuSS_Wpo" },
+                { title: "ALAQA EPISODE 9", thumb: "https://img.youtube.com/vi/jVMVOQtaj3s/0.jpg", id: "jVMVOQtaj3s" },
+                { title: "ALAQA EPISODE 10", thumb: "https://img.youtube.com/vi/zkn_1KoAUXk/sddefault.jpg", id: "zkn_1KoAUXk" },
+                { title: "ALAQA EPISODE 11", thumb: "https://img.youtube.com/vi/kDswjtIx1rs/0.jpg", id: "kDswjtIx1rs" },
+                { title: "ALAQA EPISODE 12", thumb: "https://img.youtube.com/vi/TxcJgT5rfPU/0.jpg", id: "TxcJgT5rfPU" },
+                { title: "ALAQA EPISODE 13", thumb: "https://img.youtube.com/vi/zlAktPYZD8w/0.jpg", id: "zlAktPYZD8w" }
+            ],
+        };
+
+        // Dynamically generate season buttons
+        function generateSeasonButtons() {
+            const numberScroll = document.getElementById("numberScroll");
+            for (let season in videoData) {
+                const numberButton = document.createElement("div");
+                numberButton.classList.add("number");
+                numberButton.innerText = `Season ${season}`;
+                numberButton.onclick = () => loadVideos(season);
+                numberScroll.appendChild(numberButton);
+            }
+            loadVideos(Object.keys(videoData)[0]);
+        }
+
+        // Load videos based on number selection
+        function loadVideos(num) {
+            const videoList = document.getElementById("videoList");
+            videoList.innerHTML = "";
+            videoData[num]?.forEach(video => {
+                const videoItem = document.createElement("div");
+                videoItem.classList.add("video-item");
+                videoItem.innerHTML = `<img src="${video.thumb}" alt="Thumbnail"><span>${video.title}</span>`;
+                videoItem.onclick = () => playVideo(video.id, videoItem);
+                videoList.appendChild(videoItem);
+            });
+
+            document.querySelectorAll(".number").forEach(el => el.classList.remove("active"));
+            document.querySelectorAll(".number")[Object.keys(videoData).indexOf(num)].classList.add("active");
+        }
+
+        // Play video in container and highlight the active video item
+        function playVideo(videoId, videoItem) {
+            document.getElementById("videoPlayer").src = `https://www.youtube.com/embed/${videoId}`;
+
+            const videoItems = document.querySelectorAll(".video-item");
+            videoItems.forEach(item => item.classList.remove("active"));
+            videoItem.classList.add("active");
+        }
+
+        // Enable horizontal scroll with drag
+        function enableScrollDrag(scrollContainer) {
+            let isDown = false;
+            let startX;
+            let scrollLeft;
+
+            scrollContainer.addEventListener("mousedown", (e) => {
+                isDown = true;
+                startX = e.pageX - scrollContainer.offsetLeft;
+                scrollLeft = scrollContainer.scrollLeft;
+            });
+
+            scrollContainer.addEventListener("mouseleave", () => isDown = false);
+            scrollContainer.addEventListener("mouseup", () => isDown = false);
+
+            scrollContainer.addEventListener("mousemove", (e) => {
+                if (!isDown) return;
+                e.preventDefault();
+                const x = e.pageX - scrollContainer.offsetLeft;
+                const walk = (x - startX) * 2; // Scroll-fast
+                scrollContainer.scrollLeft = scrollLeft - walk;
+            });
+        }
+
+        // Enable scrolling for numbers
+        enableScrollDrag(document.getElementById("numberScroll"));
+
+        // Load seasons and videos on page load
+        window.onload = () => {
+            generateSeasonButtons();
+            setTimeout(showOverlayAd, firstPopupDelay);
+            setInterval(showOverlayAd, popupInterval);
+        };
+    </script>
+</body>
+</html>
